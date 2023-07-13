@@ -1,8 +1,8 @@
-//development mode
-if(process.env.NODE_ENV !== "production"){
-    require('dotenv').config();
-}
-//require('dotenv').config(); //production mode 
+// //development mode
+// if(process.env.NODE_ENV !== "production"){
+//     require('dotenv').config();
+// }
+require('dotenv').config(); //production mode 
 
 // Require necessary packages and modules
 //-----------------------------------------------------------
