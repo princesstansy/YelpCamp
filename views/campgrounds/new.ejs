@@ -1,0 +1,76 @@
+<% layout('layout/boilerplate')%>
+<div class="row">
+    <h1 class="text-center">New Campground</h1>
+
+    <!-- Create a form for adding a new campground -->
+    <div class="col-6 offset-3">
+        <form action="/campgrounds" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
+              <!-- Field for entering the title of the campground -->
+            <div class="mb-3">
+                <label class="form-label" for="title">Title</label>
+                <!-- client side data validation using required attribute -->
+                <input class="form-control" type="text" id="title" name="campground[title]" required> 
+                <div class="valid-feedback">
+                    Looks good!   <!-- client side data validation successful-->
+                </div>
+            </div>
+           
+            <!-- Field for entering the location of the campground -->
+            <div class="mb-3">
+                <label class="form-label" for="location">Location</label>
+                <input class="form-control" type="text" id="location" name="campground[location]" required>
+                <div class="valid-feedback">
+                    Looks good!
+                </div>
+            </div>
+<!-- Field for entering the price of the campground -->
+           
+<div class="mb-3">
+    <label class="form-label" for="price">Campground Price</label>
+    <div class="input-group">
+        <span class="input-group-text" id="price-label">$</span>
+        <input type="text" class="form-control" id="price" placeholder="0.00" aria-label="price"
+            aria-describedby="price-label" name="campground[price]" required>
+    </div>
+    <div class="valid-feedback">
+        Looks good!
+    </div>
+</div>
+<!-- Field for entering the description of the campground -->
+<div class="mb-3">
+    <label class="form-label" for="description">Description</label>
+    <textarea class="form-control" type="text" id="description" name="campground[description]"
+        required></textarea>
+    <div class="valid-feedback">
+        Looks good!
+    </div>
+</div>
+
+
+
+             <!-- Field for adding images campground -->
+           
+             <div class="mb-3">
+                <label>Upload Images</label>
+                <div class="form-file custom-file">
+                    <input type="file" class="form-file-input" id="image" name="image" multiple>
+                    <label class="form-file-label" for="image">
+                        <span class="form-file-text custom-file-label">Choose image(s)...</span>
+                        <span class="form-file-button">Browse</span>
+                    </label>
+                </div>
+                
+           
+            </div>
+            
+             
+             <!-- Button to add the campground -->
+            <div class="mb-3">
+                <button class="btn btn-success">Add Campground</button>
+            </div>
+        </form>
+        <!-- Link to view all campgrounds -->
+        <a href="/campgrounds">All Campgrounds</a>
+    </div>
+</div>
+
