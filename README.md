@@ -18,24 +18,27 @@ YelpCamp is a web application for sharing and reviewing campgrounds. Users can s
 
 1. Clone the repository:
 
-   ```bash
+   ```bash 
    git clone https://github.com/your-username/yelp-camp.git
+   ```      
 
-2.Install dependencies
+3. Install dependencies
 
-   ```bash
+   ```bash 
    cd yelp-camp
    npm install
+   ```     
 
-3. Set up environment variables:
-   *  Create a .env file in the root directory.
+
+5. Set up environment variables:
+   * Create a .env file in the root directory.
    * Define the required environment variables in the .env file, such as the MongoDB connection URL, session secret, and any API keys.
 
-4. Run the application:
+6. Run the application:
 
-   ```bash
-   npm start
-  
+   ```bash 
+    npm start
+    ```     
    The application will start running on http://localhost:3000.
 
 
@@ -55,7 +58,8 @@ Express.js
 MongoDB
 Mongoose
 
-## Other Dependencies 
+## Other Dependencies
+
 Passport.js
 Connect-Mongo
 Express-Session
