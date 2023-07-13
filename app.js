@@ -37,9 +37,8 @@ const MongoStore = require('connect-mongo')(session);
 // Connect to the MongoDB database at the specified URL 
 //-------------------------------------------------------------
 
-//const dbUrl = "mongodb+srv://new-user-01:1234@cluster0.zii5jse.mongodb.net/?retryWrites=true&w=majority";
-mongoose.connect('mongodb://localhost:27017/yelp-camp');
-//mongoose.connect(dbUrl);
+const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+mongoose.connect(dbUrl);
 
 // Store the database connection object in a variable called 'db'
 const db = mongoose.connection;
@@ -71,9 +70,11 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.use(mongoSanitize())
 
+const secret = process.env.SECRET || 'thisshouldbeabettersecret';
+
 const store = new MongoStore({
     url: 'mongodb://localhost:27017/yelp-camp',
-    secret: 'thisshouldbeabettersecret',
+    secret,
     touchAfter: 24 * 60 * 60
 
 });
@@ -85,7 +86,7 @@ store.on("error", function(e){
 const sessionConfig = {
     store,
     name: 'session',
-    secret: 'thisshouldbeabettersecret', // Secret used to sign the session ID cookie
+    secret, // Secret used to sign the session ID cookie
     resave: false, // Determines whether the session should be saved back to the session store
     saveUninitialized: true, // Determines whether uninitialized sessions should be saved to the session store
     cookie: {
@@ -160,7 +161,8 @@ app.use((err, req, res, next) =>{
 
 
 //start the server and listen oncoming requests
-app.listen(3000, () => {
-    console.log('Serving on port 3000');
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`Serving on port ${port}`);
 }) 
 
