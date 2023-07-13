@@ -26,13 +26,16 @@ YelpCamp is a web application for sharing and reviewing campgrounds. Users can s
    ```bash
    cd yelp-camp
    npm install
+
 3. Set up environment variables:
    *  Create a .env file in the root directory.
    * Define the required environment variables in the .env file, such as the MongoDB connection URL, session secret, and any API keys.
 
 4. Run the application:
- ```bash
+
+   ```bash
    npm start
+  
    The application will start running on http://localhost:3000.
 
 
