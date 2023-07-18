@@ -4,7 +4,7 @@ container: 'cluster-map',
 // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
 style: 'mapbox://styles/mapbox/light-v11',
 center: [80.0982, 23.0707],
-zoom: 3
+zoom: 3.4
 });
 
 map.addControl(new mapboxgl.NavigationControl());
