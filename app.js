@@ -1,89 +1,115 @@
-
-
-if (process.env.NODE_ENV !== "production") {
-    require('dotenv').config();
+//development mode
+if(process.env.NODE_ENV !== "production"){
+  require('dotenv').config();
 }
+//require('dotenv').config(); //production mode 
 
 // Require necessary packages and modules
-const express = require('express'); // Express.js framework
-const session = require('express-session');
-const MongoStore = require('connect-mongo'); // Correct usage of the MongoStore constructor
+//-----------------------------------------------------------
 
-// Other required packages and modules...
-const mongoose = require('mongoose');
-const path = require('path');
-const ejsMate = require('ejs-mate');
+const mongoose = require('mongoose'); // Mongoose library for MongoDB interactions
+
+const express = require('express'); // Express.js framework
+const path = require('path'); // Path module for working with file and directory path
+const ejsMate = require('ejs-mate'); // ejs-mate package for using EJS templates
+const session = require('express-session');
 const flash = require('connect-flash');
-const methodOverride = require('method-override');
-const Joi = require('joi');
+const methodOverride = require('method-override'); // method-override package for HTTP method overriding
+
+const Joi = require('joi'); // Joi library for data validation
+
 const ExpressError = require('./utils/ExpressError');
+
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user');
-const campgroundRoutes = require('./routes/campgrounds');
-const reviewRoutes = require('./routes/reviews');
+
 const userRoutes = require('./routes/users');
 const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
+const campgroundRoutes = require('./routes/campgrounds');
+const reviewRoutes = require('./routes/reviews');
+const MongoDBStore = require("connect-mongo")(session);
 
+//------------------------------------------------------------
 
-// Connect to the MongoDB database at the specified URL
+// Connect to the MongoDB database at the specified URL 
+//-------------------------------------------------------------
 const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
 mongoose.connect(dbUrl);
+//mongoose.connect(dbUrl);
 
-// Create an instance of MongoStore using the session object
-const store = MongoStore.create({
-  mongoUrl: dbUrl,
-  touchAfter: 24 * 60 * 60, // You can adjust this value according to your needs
-  crypto: {
-    secret: process.env.MONGO_STORE_SECRET || 'thisshouldbeabettersecret!', // You should use a strong secret here or store it in an environment variable
-  },
+// Store the database connection object in a variable called 'db'
+const db = mongoose.connection;
+// Log an error message if there's an issue connecting to the database
+db.on("error", console.error.bind(console, "connection error:"));
+// Once the connection is open, log a success message
+db.once('open', () => {
+ console.log("Database connected");
 });
 
-// Creating and setting up a new Express app
-const app = express();
+//-------------------------------------------------------------
 
+
+// Creating and setting up a new Express app
+//-------------------------------------------------------------
+const app = express();
 // Setting up the EJS templating engine
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Parse request bodies as URL-encoded data
-app.use(express.urlencoded({ extended: true }));
 
+// Parse request bodies as URL-encoded data
+app.use(express.urlencoded({extended: true}));
 // Enable method overriding for PUT and DELETE requests
 app.use(methodOverride('_method'));
 
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')))
 
-// Sanitize user input to prevent NoSQL injection
-app.use(mongoSanitize());
+app.use(mongoSanitize({
+  replaceWith: '_'
+}))
+
+const secret = process.env.SECRET || 'thisshouldbeabettersecret';
+const store = new MongoDBStore({
+  url: dbUrl,
+  secret: secret,
+  touchAfter: 24 * 60 * 60
+});
+
+store.on("error", function (e){
+  console.log("SESSION STORE ERROR", e)
+})
 
 // Configuration for the session middleware
 const sessionConfig = {
   store,
   name: 'session',
-  secret: process.env.SESSION_SECRET || 'thisshouldbeabettersecret', // Secret used to sign the session ID cookie, you can store it in an environment variable
-  resave: false,
-  saveUninitialized: true,
+  secret: secret, // Secret used to sign the session ID cookie
+  resave: false, // Determines whether the session should be saved back to the session store
+  saveUninitialized: true, // Determines whether uninitialized sessions should be saved to the session store
   cookie: {
-    httpOnly: true,
-    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-  },
-};
+      httpOnly: true, // Ensures that the cookie is only accessible through HTTP(S) requests
+      expires: Date.now() + 1000 * 60 * 60 * 24 * 7, // Sets the expiry date of the cookie (7 days from the current time)
+      maxAge: 1000 * 60 * 60 * 24 * 7 // Sets the maximum age of the cookie (7 days in milliseconds)
+  }
+}
+
 
 app.use(session(sessionConfig));
 
-// Flash messages middleware
-app.use(flash());
+app.use(flash()); //flash middleware
+app.use(helmet({contentSecurityPolicy: false}));
 
-// Helmet middleware for setting security headers
-app.use(helmet({ contentSecurityPolicy: false }));
+//--------------------------------------------------------------------------------------
+//Passport setup - for authentication 
+//--------------------------------------------------------------------------------------
 
-// Passport middleware setup - for authentication
+// Initialize Passport middleware
 app.use(passport.initialize());
+
+// Configure Passport to use session-based authentication
 app.use(passport.session());
 
 // Set up a LocalStrategy for authenticating users based on username and password
@@ -95,36 +121,45 @@ passport.serializeUser(User.serializeUser());
 // Configure how user objects are deserialized from the session
 passport.deserializeUser(User.deserializeUser());
 
-// Middleware for storing the returnTo URL for redirecting after login
-app.use((req, res, next) => {
-  if (!['/login', '/'].includes(req.originalUrl)) {
-    req.session.returnTo = req.originalUrl;
+app.use((req, res, next) =>{
+  if(!['/login', '/'].includes(req.originalUrl)){
+      req.session.returnTo = req.originalUrl;
   }
-  res.locals.currentUser = req.user;
-  res.locals.success = req.flash('success');
-  res.locals.error = req.flash('error');
-  next();
-});
+ res.locals.currentUser = req.user;
+ res.locals.success = req.flash('success');
+ res.locals.error = req.flash('error');
+ next();
+})
+
+//--------------------------------------------------------------------------------------
 
 // Define routes and handle requests
+
 app.use('/', userRoutes);
 app.use('/campgrounds', campgroundRoutes);
 app.use('/campgrounds/:id/reviews', reviewRoutes);
-
-// Route for the home page ("/")
+// -----------------------------------------------------------
+// Defining a route for the home page ("/") that sends the response "Home"
 app.get('/', (req, res) => {
   res.render('home');
 });
 
-// Catch-all route handler (handles requests for non-existent routes)
+
+
+//catch-all route handler (handles requests for non-existent routes.)
 app.all('*', (req, res, next) => {
-  next(new ExpressError('Page Not Found', 404));
-});
+ next(new ExpressError('Page Not Found', 404))
+})
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  const { statusCode = 500 } = err;
-  if (!err.message) err.message = 'Something went wrong';
-  res.status(statusCode).render('error.ejs', { err });
-});
+//Error handling middleware 
+app.use((err, req, res, next) =>{
+  const {statusCode = 500} = err;
+  if(!err.message) err.message = 'something went wrong'
+  res.status(statusCode).render('error.ejs', {err});
 
+})
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Serving on port ${port}`)
+})
